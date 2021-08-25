@@ -1,6 +1,6 @@
 name: reactive_multi_image_picker
 description: Field for picking image(s) from Gallery or Camera for reactive_forms package
-version: 1.0.0-nullsafety.0
+version: 1.0.0
 homepage: https://github.com/victorcatn/reactive_multi_image_picker
 
 environment:
