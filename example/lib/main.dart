@@ -1,6 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:form_builder_image_picker/form_builder_image_picker.dart';
+import 'package:reactive_forms/reactive_forms.dart';
+import 'package:reactive_multi_image_picker/reactive_multi_image_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -21,40 +23,53 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatelessWidget {
-  final _formKey = GlobalKey<FormBuilderState>();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('FormBuilderImagePicker Example'),
+        title: Text('ReactiveMultiImagePicker Example'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
-          child: FormBuilder(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                FormBuilderImagePicker(
-                  name: 'photos',
-                  decoration: const InputDecoration(labelText: 'Pick Photos'),
-                  maxImages: 1,
-                ),
-                const SizedBox(height: 15),
-                ElevatedButton(
-                    child: Text('Submit'),
-                    onPressed: () {
-                      if (_formKey.currentState.saveAndValidate()) {
-                        print(_formKey.currentState.value);
-                      }
-                    })
-              ],
-            ),
+          child: ReactiveFormBuilder(
+            form: () => fb.group({"images": fb.control<List<String>>([])}),
+            builder: (context, form, child) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  ReactiveMultiImagePicker<String, File>(
+                    formControlName: 'images',
+                    valueAccessor: FileValueAccessor(),
+                    decoration: const InputDecoration(labelText: 'Pick Photos'),
+                    maxImages: 3,
+                  ),
+                  const SizedBox(height: 15),
+                  ElevatedButton(
+                      child: Text('Submit'),
+                      onPressed: () async {
+                        if (form.valid) {
+                          print(form.value);
+                        }
+                      }),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
+  }
+}
+
+class FileValueAccessor extends ControlValueAccessor<List<String>, List<File>> {
+  @override
+  modelToViewValue(paths) {
+    return paths.map((path) => File(path)).toList();
+  }
+
+  @override
+  viewToModelValue(files) {
+    return files.map((file) => file.path).toList();
   }
 }
