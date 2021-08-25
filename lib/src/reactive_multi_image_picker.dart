@@ -3,11 +3,13 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'full_screen_viewer.dart';
 import 'image_source_sheet.dart';
+import 'images_previewer.dart';
 
 /// Field for picking image(s) from Gallery or Camera.
 /// TODO: review the types
@@ -93,65 +95,39 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                   enabled: state.enabled,
                   labelText: decoration?.labelText,
                   contentPadding: const EdgeInsets.all(8.0)),
-              child: Container(
-                height: previewHeight,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    if (field.value != null)
-                      ...field.value!.map<Widget>((item) {
-                        assert(item is File ||
-                            item is String ||
-                            item is Uint8List);
-                        return Stack(
-                          alignment: Alignment.topRight,
-                          children: <Widget>[
-                            Container(
-                              width: previewWidth,
-                              height: previewHeight,
-                              margin: previewMargin,
-                              child: FullScreenViewer(
-                                child: kIsWeb
-                                    ? Image.memory(item as Uint8List,
-                                        fit: BoxFit.cover)
-                                    : item is String
-                                        ? Image.network(item, fit: BoxFit.cover)
-                                        : Image.file(item as File,
-                                            fit: BoxFit.cover),
-                              ),
-                            ),
-                            if (state.enabled)
-                              InkWell(
-                                onTap: () {
-                                  state.requestFocus();
-                                  field.didChange(
-                                    [...?field.value]..removeWhere(
-                                        (e) => e.toString() == item.toString(),
-                                        // Hmmmmmmm
-                                      ),
-                                  );
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.all(3),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(.7),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  height: 22,
-                                  width: 22,
-                                  child: const Icon(
-                                    Icons.close,
-                                    size: 18,
-                                    color: Colors.white,
-                                  ),
+              child: ImagesPreviewer<ViewDataType>(
+                items: field.value,
+                deleteImageBuilder: !state.enabled
+                    ? null
+                    : (context, item) => InkWell(
+                          onTap: () {
+                            state.requestFocus();
+                            field.didChange(
+                              [...?field.value]..removeWhere(
+                                  (e) => e.toString() == item.toString(),
+                                  // Hmmmmmmm
                                 ),
-                              ),
-                          ],
-                        );
-                      }),
-                    if (state.enabled && !state.hasMaxImages)
-                      GestureDetector(
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(.7),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            height: 22,
+                            width: 22,
+                            child: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                addImageWidget: !(state.enabled && !state.hasMaxImages)
+                    ? null
+                    : GestureDetector(
                         child: placeholderImage != null
                             ? Image(
                                 width: previewWidth,
@@ -202,8 +178,6 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                           );
                         },
                       ),
-                  ],
-                ),
               ),
             );
           },
