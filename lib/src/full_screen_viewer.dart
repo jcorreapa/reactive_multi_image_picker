@@ -26,13 +26,5 @@ class FullScreenViewer extends StatelessWidget {
             ),
           );
         }));
-    /*showDialog(
-        context: context,
-        builder: (context) => Center(
-              child: Hero(
-                tag: child,
-                child: InteractiveViewer(child: child),
-              ),
-            ));*/
   }
 }

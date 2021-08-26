@@ -14,6 +14,7 @@ class ImagesPreviewer<ViewDataType> extends StatelessWidget {
       deleteImageBuilder;
   final Widget? addImageWidget;
   final Iterable<ViewDataType>? items;
+  final Widget Function(ViewDataType item)? imageBuilder;
 
   const ImagesPreviewer({
     Key? key,
@@ -23,6 +24,7 @@ class ImagesPreviewer<ViewDataType> extends StatelessWidget {
     this.deleteImageBuilder,
     this.addImageWidget,
     required this.items,
+    this.imageBuilder,
   }) : super(key: key);
 
   @override
@@ -34,7 +36,6 @@ class ImagesPreviewer<ViewDataType> extends StatelessWidget {
         children: [
           if (items != null)
             ...items!.map<Widget>((item) {
-              assert(item is File || item is String || item is Uint8List);
               return Stack(
                 alignment: Alignment.topRight,
                 children: <Widget>[
@@ -43,11 +44,9 @@ class ImagesPreviewer<ViewDataType> extends StatelessWidget {
                     height: previewHeight,
                     margin: previewMargin,
                     child: FullScreenViewer(
-                      child: kIsWeb
-                          ? Image.memory(item as Uint8List, fit: BoxFit.cover)
-                          : item is String
-                              ? Image.network(item, fit: BoxFit.cover)
-                              : Image.file(item as File, fit: BoxFit.cover),
+                      child: imageBuilder != null
+                          ? imageBuilder!(item)
+                          : _defaultImageBuilder(item),
                     ),
                   ),
                   if (deleteImageBuilder != null)
@@ -59,5 +58,13 @@ class ImagesPreviewer<ViewDataType> extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _defaultImageBuilder(ViewDataType item) {
+    return kIsWeb
+        ? Image.network(item as String, fit: BoxFit.cover)
+        : item is String
+            ? Image.network(item, fit: BoxFit.cover)
+            : Image.file(item as File, fit: BoxFit.cover);
   }
 }

@@ -25,14 +25,9 @@ class ImageSourceBottomSheet extends StatefulWidget {
 
   /// Callback when an image is selected.
   ///
-  /// **Note**: This will work on web platform whereas [onImageSelected] will not.
-  final void Function(Uint8List)? onImage;
-
-  /// Callback when an image is selected.
-  ///
   /// **Warning**: This will _NOT_ work on web platform because [File] is not
   /// available.
-  final void Function(File)? onImageSelected;
+  final void Function(XFile) onImageSelected;
 
   final Widget? cameraIcon;
   final Widget? galleryIcon;
@@ -46,15 +41,13 @@ class ImageSourceBottomSheet extends StatefulWidget {
     this.maxWidth,
     this.imageQuality,
     this.preferredCameraDevice = CameraDevice.rear,
-    this.onImage,
-    this.onImageSelected,
+    required this.onImageSelected,
     this.cameraIcon,
     this.galleryIcon,
     this.cameraLabel,
     this.galleryLabel,
     this.bottomSheetPadding,
-  })  : assert(null != onImage || null != onImageSelected),
-        super(key: key);
+  }) : super(key: key);
 
   @override
   _ImageSourceBottomSheetState createState() => _ImageSourceBottomSheetState();
@@ -67,7 +60,7 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
     if (_isPickingImage) return;
     _isPickingImage = true;
     final imagePicker = ImagePicker();
-    final pickedFile = await imagePicker.getImage(
+    final pickedFile = await imagePicker.pickImage(
       source: source,
       maxHeight: widget.maxHeight,
       maxWidth: widget.maxWidth,
@@ -75,20 +68,8 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
       preferredCameraDevice: widget.preferredCameraDevice,
     );
     _isPickingImage = false;
-    if (null != pickedFile) {
-      if (kIsWeb) {
-        if (null != widget.onImage) {
-          widget.onImage!(await pickedFile.readAsBytes());
-        }
-      } else {
-        if (null != widget.onImageSelected) {
-          // Warning:  this will not work on the web platform because pickedFile
-          // will instead point to a network resource.
-          final imageFile = File(pickedFile.path);
-          // assert(null != imageFile);
-          widget.onImageSelected!(imageFile);
-        }
-      }
+    if (pickedFile != null) {
+      widget.onImageSelected(pickedFile);
     }
   }
 

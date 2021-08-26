@@ -12,7 +12,7 @@ import 'image_source_sheet.dart';
 import 'images_previewer.dart';
 
 /// Field for picking image(s) from Gallery or Camera.
-/// TODO: review the types
+
 class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
     extends ReactiveFormField<List<ModelDataType>, List<ViewDataType>> {
   //TODO: Add documentation
@@ -48,6 +48,9 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
   final Widget galleryLabel;
   final EdgeInsets bottomSheetPadding;
 
+  final ViewDataType Function(XFile file)? xFileConverter;
+  final Widget Function(ViewDataType item)? imageBuilder;
+
   /// Creates field for picking image(s) from Gallery or Camera.
   ReactiveMultiImagePicker({
     Key? key,
@@ -75,7 +78,11 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
     this.galleryLabel = const Text('Gallery'),
     this.bottomSheetPadding = EdgeInsets.zero,
     this.placeholderImage,
+    this.xFileConverter,
+    this.imageBuilder,
   })  : assert(maxImages == null || maxImages >= 0),
+        assert(ViewDataType is XFile || xFileConverter != null,
+            "if ViewDataType is not XFile, xFileConverter must be defined"),
         super(
           key: key,
           formControl: formControl,
@@ -97,16 +104,14 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                   contentPadding: const EdgeInsets.all(8.0)),
               child: ImagesPreviewer<ViewDataType>(
                 items: field.value,
+                imageBuilder: imageBuilder,
                 deleteImageBuilder: !state.enabled
                     ? null
                     : (context, item) => InkWell(
                           onTap: () {
                             state.requestFocus();
                             field.didChange(
-                              [...?field.value]..removeWhere(
-                                  (e) => e.toString() == item.toString(),
-                                  // Hmmmmmmm
-                                ),
+                              [...?field.value]..remove(item),
                             );
                           },
                           child: Container(
@@ -163,13 +168,12 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                                 galleryLabel: galleryLabel,
                                 onImageSelected: (image) {
                                   state.requestFocus();
-                                  field.didChange(
-                                      [...?field.value, image as ViewDataType]);
-                                  Navigator.pop(state.context);
-                                },
-                                onImage: (image) {
-                                  field.didChange(
-                                      [...?field.value, image as ViewDataType]);
+                                  field.didChange([
+                                    ...?field.value,
+                                    xFileConverter != null
+                                        ? xFileConverter(image)
+                                        : (image as ViewDataType)
+                                  ]);
                                   onChanged?.call(field.value);
                                   Navigator.pop(state.context);
                                 },
