@@ -1,13 +1,8 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
-import 'package:reactive_forms/reactive_forms.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
-import 'full_screen_viewer.dart';
 import 'image_source_sheet.dart';
 import 'images_previewer.dart';
 
@@ -96,6 +91,9 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
             final disabledColor = theme.disabledColor;
             final primaryColor = theme.primaryColor;
 
+            final height = field.value != null && field.value!.length > 0 ? 160.0 : 30.0;
+            final width = height;
+
             return InputDecorator(
               decoration: (decoration ?? InputDecoration()).copyWith(
                   filled: false,
@@ -103,6 +101,8 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                   labelText: decoration?.labelText,
                   contentPadding: const EdgeInsets.all(8.0)),
               child: ImagesPreviewer<ViewDataType>(
+                previewHeight: height,
+                previewWidth: width,
                 items: field.value,
                 imageBuilder: imageBuilder,
                 deleteImageBuilder: !state.enabled
@@ -135,13 +135,13 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                     : GestureDetector(
                         child: placeholderImage != null
                             ? Image(
-                                width: previewWidth,
-                                height: previewHeight,
+                                width: height,
+                                height: width,
                                 image: placeholderImage,
                               )
                             : Container(
-                                width: previewWidth,
-                                height: previewHeight,
+                                width: width,
+                                height: height,
                                 child: Icon(
                                   Icons.camera_enhance,
                                   color: state.enabled
