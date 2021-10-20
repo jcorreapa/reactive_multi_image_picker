@@ -15,6 +15,7 @@ dependencies:
   freezed_annotation: ^0.15.0
   reactive_multi_image_picker:
     path: ../
+  provider:
 
 dev_dependencies:
   flutter_test:
