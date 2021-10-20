@@ -1,6 +1,5 @@
 import 'dart:io';
 
-
 import 'package:example/image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +37,11 @@ class MyHomePage extends StatelessWidget {
           child: ReactiveFormBuilder(
             form: () => fb.group({
               "images": fb.control<List<AppImage>>(
-                  [AppImage.remote("https://i.imgur.com/fkVpmGE.jpeg")])
+                  [AppImage.remote("https://i.imgur.com/fkVpmGE.jpeg")],
+                  [Validators.maxLength(2)]),
+              "image": fb.control<AppImage>(
+                  AppImage.remote("https://i.imgur.com/fkVpmGE.jpeg"),
+                  [Validators.required]),
             }),
             builder: (context, form, child) {
               return Column(
@@ -47,8 +50,20 @@ class MyHomePage extends StatelessWidget {
                   ReactiveMultiImagePicker<AppImage, AppImage>(
                     formControlName: 'images',
                     //valueAccessor: FileValueAccessor(),
-                    decoration: const InputDecoration(labelText: 'Pick Photos'),
-                    maxImages: 3,
+                    decoration: const InputDecoration(labelText: 'Pick photos'),
+                    imageBuilder: (image) => image.when(
+                      remote: (url) => Image.network(url),
+                      mobile: (xfile) => Image.file(File(xfile.path)),
+                      web: (xfile) => Image.network(xfile.path),
+                    ),
+                    xFileConverter: (file) =>
+                        kIsWeb ? AppImage.web(file) : AppImage.mobile(file),
+                  ),
+                  ReactiveImagePicker<AppImage, AppImage>(
+                    formControlName: 'image',
+                    //valueAccessor: FileValueAccessor(),
+                    decoration:
+                        const InputDecoration(labelText: 'Pick one photo'),
                     imageBuilder: (image) => image.when(
                       remote: (url) => Image.network(url),
                       mobile: (xfile) => Image.file(File(xfile.path)),

@@ -68,3 +68,64 @@ class ImagesPreviewer<ViewDataType> extends StatelessWidget {
             : Image.file(item as File, fit: BoxFit.cover);
   }
 }
+
+class ImagePreviewer<ViewDataType> extends StatelessWidget {
+  final double previewWidth;
+  final double previewHeight;
+  final EdgeInsets? previewMargin;
+  final Widget Function(BuildContext context, ViewDataType item)?
+      deleteImageBuilder;
+  final Widget? addImageWidget;
+  final ViewDataType? image;
+  final Widget Function(ViewDataType item)? imageBuilder;
+
+  const ImagePreviewer({
+    Key? key,
+    this.previewWidth = 130,
+    this.previewHeight = 130,
+    this.previewMargin,
+    this.deleteImageBuilder,
+    this.addImageWidget,
+    required this.image,
+    this.imageBuilder,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: previewHeight,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          if (image != null)
+            Stack(
+              alignment: Alignment.topRight,
+              children: <Widget>[
+                Container(
+                  width: previewWidth,
+                  height: previewHeight,
+                  margin: previewMargin,
+                  child: FullScreenViewer(
+                    child: imageBuilder != null
+                        ? imageBuilder!(image!)
+                        : _defaultImageBuilder(image!),
+                  ),
+                ),
+                if (deleteImageBuilder != null)
+                  deleteImageBuilder!(context, image!),
+              ],
+            ),
+          if (addImageWidget != null) addImageWidget!,
+        ],
+      ),
+    );
+  }
+
+  Widget _defaultImageBuilder(ViewDataType item) {
+    return kIsWeb
+        ? Image.network(item as String, fit: BoxFit.cover)
+        : item is String
+            ? Image.network(item, fit: BoxFit.cover)
+            : Image.file(item as File, fit: BoxFit.cover);
+  }
+}

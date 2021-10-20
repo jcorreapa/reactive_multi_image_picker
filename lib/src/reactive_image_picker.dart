@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:reactive_forms/reactive_forms.dart';
@@ -6,10 +6,8 @@ import 'package:reactive_forms/reactive_forms.dart';
 import 'image_source_sheet.dart';
 import 'images_previewer.dart';
 
-/// Field for picking image(s) from Gallery or Camera.
-
-class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
-    extends ReactiveFormField<List<ModelDataType>, List<ViewDataType>> {
+class ReactiveImagePicker<ModelDataType, ViewDataType>
+    extends ReactiveFormField<ModelDataType, ViewDataType> {
   //TODO: Add documentation
   final double previewWidth;
   final double previewHeight;
@@ -36,7 +34,6 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
   final CameraDevice preferredCameraDevice;
 
   final void Function(Image)? onImage;
-  final int? maxImages;
   final Widget cameraIcon;
   final Widget galleryIcon;
   final Widget cameraLabel;
@@ -47,16 +44,15 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
   final Widget Function(ViewDataType item)? imageBuilder;
 
   /// Creates field for picking image(s) from Gallery or Camera.
-  ReactiveMultiImagePicker({
+  ReactiveImagePicker({
     Key? key,
     String? formControlName,
     InputDecoration? decoration,
-    FormControl<List<ModelDataType>>? formControl,
-    ValidationMessagesFunction<List<ModelDataType>>? validationMessages,
-    ControlValueAccessor<List<ModelDataType>, List<ViewDataType>>?
-        valueAccessor,
+    FormControl<ModelDataType>? formControl,
+    ValidationMessagesFunction<ModelDataType>? validationMessages,
+    ControlValueAccessor<ModelDataType, ViewDataType>? valueAccessor,
     ShowErrorsFunction? showErrors,
-    ValueChanged<List<ViewDataType>?>? onChanged,
+    ValueChanged<ViewDataType?>? onChanged,
     this.previewWidth = 130,
     this.previewHeight = 130,
     this.previewMargin,
@@ -66,7 +62,6 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
     this.imageQuality,
     this.preferredCameraDevice = CameraDevice.rear,
     this.onImage,
-    this.maxImages,
     this.cameraIcon = const Icon(Icons.camera_enhance),
     this.galleryIcon = const Icon(Icons.image),
     this.cameraLabel = const Text('Camera'),
@@ -75,8 +70,7 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
     this.placeholderImage,
     this.xFileConverter,
     this.imageBuilder,
-  })  : assert(maxImages == null || maxImages >= 0),
-        assert(ViewDataType is XFile || xFileConverter != null,
+  })  : assert(ViewDataType is XFile || xFileConverter != null,
             "if ViewDataType is not XFile, xFileConverter must be defined"),
         super(
           key: key,
@@ -86,34 +80,32 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
           validationMessages: validationMessages,
           showErrors: showErrors,
           builder: (field) {
-            final state = field as _ReactiveMultiImagePickerState;
+            final state = field as _ReactiveImagePickerState;
             final theme = Theme.of(state.context);
             final disabledColor = theme.disabledColor;
             final primaryColor = theme.primaryColor;
 
-            final height =
-                field.value != null && field.value!.length > 0 ? 160.0 : 30.0;
+            final height = field.value != null ? 160.0 : 30.0;
             final width = height;
 
             return InputDecorator(
               decoration: (decoration ?? InputDecoration()).copyWith(
-                  filled: false,
-                  enabled: state.enabled,
-                  labelText: decoration?.labelText,
-                  contentPadding: const EdgeInsets.all(8.0)),
-              child: ImagesPreviewer<ViewDataType>(
+                filled: false,
+                enabled: state.enabled,
+                labelText: decoration?.labelText,
+                contentPadding: const EdgeInsets.all(8.0),
+              ),
+              child: ImagePreviewer<ViewDataType>(
                 previewHeight: height,
                 previewWidth: width,
-                items: field.value,
+                image: field.value,
                 imageBuilder: imageBuilder,
                 deleteImageBuilder: !state.enabled
                     ? null
                     : (context, item) => InkWell(
                           onTap: () {
                             state.requestFocus();
-                            field.didChange(
-                              [...?field.value]..remove(item),
-                            );
+                            field.didChange(null);
                           },
                           child: Container(
                             margin: const EdgeInsets.all(3),
@@ -131,7 +123,7 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                             ),
                           ),
                         ),
-                addImageWidget: !(state.enabled && !state.hasMaxImages)
+                addImageWidget: !state.enabled || state.value != null
                     ? null
                     : GestureDetector(
                         child: placeholderImage != null
@@ -169,12 +161,9 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                                 galleryLabel: galleryLabel,
                                 onImageSelected: (image) {
                                   state.requestFocus();
-                                  field.didChange([
-                                    ...?field.value,
-                                    xFileConverter != null
-                                        ? xFileConverter(image)
-                                        : (image as ViewDataType)
-                                  ]);
+                                  field.didChange(xFileConverter != null
+                                      ? xFileConverter(image)
+                                      : (image as ViewDataType));
                                   onChanged?.call(field.value);
                                   Navigator.pop(state.context);
                                 },
@@ -189,18 +178,12 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
         );
 
   @override
-  _ReactiveMultiImagePickerState<ModelDataType, ViewDataType> createState() =>
-      _ReactiveMultiImagePickerState<ModelDataType, ViewDataType>();
+  _ReactiveImagePickerState<ModelDataType, ViewDataType> createState() =>
+      _ReactiveImagePickerState<ModelDataType, ViewDataType>();
 }
 
-class _ReactiveMultiImagePickerState<ModelDataType, ViewDataType>
-    extends ReactiveFormFieldState<List<ModelDataType>, List<ViewDataType>> {
-  bool get hasMaxImages =>
-      ((widget as ReactiveMultiImagePicker).maxImages != null &&
-          value != null &&
-          value!.length >= (widget as ReactiveMultiImagePicker).maxImages!);
-  //|| control.errors.containsKey(ValidationMessage.maxLength); // esto deja agregar una imagen de mas que genera el error
-
+class _ReactiveImagePickerState<ModelDataType, ViewDataType>
+    extends ReactiveFormFieldState<ModelDataType, ViewDataType> {
   bool get enabled => control.enabled;
 
   requestFocus() => control.focus();
