@@ -18,6 +18,12 @@ class FullScreenViewer extends StatelessWidget {
         fullscreenDialog: true,
         builder: (BuildContext context) {
           return Scaffold(
+            appBar: AppBar(
+              leading: const BackButton(),
+              backgroundColor: Colors.transparent,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              elevation: 0,
+            ),
             body: Center(
               child: Hero(
                 tag: child,
@@ -26,13 +32,5 @@ class FullScreenViewer extends StatelessWidget {
             ),
           );
         }));
-    /*showDialog(
-        context: context,
-        builder: (context) => Center(
-              child: Hero(
-                tag: child,
-                child: InteractiveViewer(child: child),
-              ),
-            ));*/
   }
 }

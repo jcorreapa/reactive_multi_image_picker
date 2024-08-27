@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:example/image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 import 'package:reactive_multi_image_picker/reactive_multi_image_picker.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(MyApp());
@@ -22,6 +25,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class MyForm{
+  final imagesControl = fb.control<List<AppImage>>(
+                  [AppImage.remote("https://i.imgur.com/fkVpmGE.jpeg")],
+                  [Validators.maxLength(2)]);
+  final imageControl = fb.control<AppImage?>(null, [Validators.required]);
+  late final control = fb.group({"images": imagesControl, "image": imageControl});
+}
+
 class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -32,44 +43,68 @@ class MyHomePage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
-          child: ReactiveFormBuilder(
-            form: () => fb.group({"images": fb.control<List<String>>([])}),
-            builder: (context, form, child) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  ReactiveMultiImagePicker<String, File>(
-                    formControlName: 'images',
-                    valueAccessor: FileValueAccessor(),
-                    decoration: const InputDecoration(labelText: 'Pick Photos'),
-                    maxImages: 3,
-                  ),
-                  const SizedBox(height: 15),
-                  ElevatedButton(
-                      child: Text('Submit'),
-                      onPressed: () async {
-                        if (form.valid) {
-                          print(form.value);
-                        }
-                      }),
-                ],
+          child: Provider(
+            create: (_) => MyForm(),
+            builder: (context, _) {
+              final myForm = Provider.of<MyForm>(context);
+              return ReactiveForm(
+                formGroup: myForm.control,
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      ReactiveMultiImagePicker<AppImage, AppImage>(
+                        formControl: myForm.imagesControl,
+                        //valueAccessor: FileValueAccessor(),
+                        decoration: const InputDecoration(labelText: 'Pick photos'),
+                        imageBuilder: (image) => image.when(
+                          remote: (url) => Image.network(url),
+                          mobile: (xfile) => Image.file(File(xfile.path)),
+                          web: (xfile) => Image.network(xfile.path),
+                        ),
+                        xFileConverter: (file) =>
+                            kIsWeb ? AppImage.web(file) : AppImage.mobile(file),
+                      ),
+                      ReactiveImagePicker<AppImage?, AppImage>(
+                        formControl: myForm.imageControl,
+   
+                        decoration:
+                            const InputDecoration(labelText: 'Pick one photo'),
+                        imageBuilder: (image) => image.when(
+                          remote: (url) => Image.network(url),
+                          mobile: (xfile) => Image.file(File(xfile.path)),
+                          web: (xfile) => Image.network(xfile.path),
+                        ),
+                        xFileConverter: (file) =>
+                            kIsWeb ? AppImage.web(file) : AppImage.mobile(file),
+                      ),
+                      const SizedBox(height: 15),
+                      ElevatedButton(
+                          child: Text('Submit'),
+                          onPressed: () async {
+                            if (myForm.control.valid) {
+                              print(myForm.control.value);
+                            }
+                          }),
+                    ],
+                  )
+                
               );
-            },
+            }
           ),
         ),
       ),
     );
   }
 }
-
+/*
 class FileValueAccessor extends ControlValueAccessor<List<String>, List<File>> {
   @override
   modelToViewValue(paths) {
-    return paths.map((path) => File(path)).toList();
+    return paths?.map((path) => File(path)).toList();
   }
 
   @override
   viewToModelValue(files) {
-    return files.map((file) => file.path).toList();
+    return files?.map((file) => file.path).toList();
   }
-}
+}*/
