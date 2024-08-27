@@ -6,6 +6,8 @@ import 'package:reactive_forms/reactive_forms.dart';
 import 'image_source_sheet.dart';
 import 'images_previewer.dart';
 
+typedef ValidationMessagesFunction<T> = Map<String, String Function(Object)>;
+
 /// Field for picking image(s) from Gallery or Camera.
 
 class ReactiveMultiImagePicker<ModelDataType, ViewDataType>

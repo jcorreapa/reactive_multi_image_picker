@@ -100,11 +100,11 @@ class MyHomePage extends StatelessWidget {
 class FileValueAccessor extends ControlValueAccessor<List<String>, List<File>> {
   @override
   modelToViewValue(paths) {
-    return paths.map((path) => File(path)).toList();
+    return paths?.map((path) => File(path)).toList();
   }
 
   @override
   viewToModelValue(files) {
-    return files.map((file) => file.path).toList();
+    return files?.map((file) => file.path).toList();
   }
 }*/
