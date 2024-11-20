@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data' show Uint8List;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:reactive_multi_image_picker/src/image_saver.dart';
 
 class ImageSourceBottomSheet extends StatefulWidget {
   /// Optional maximum height of image
@@ -69,7 +69,31 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
     );
     _isPickingImage = false;
     if (pickedFile != null) {
-      widget.onImageSelected(pickedFile);
+      PermissionStatus status = await Permission.photos.status;
+      try {
+        if (!status.isGranted) {
+          status = await Permission.photos.request();
+          if (!status.isGranted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                      'Por favor, acepta el permiso para acceder a la galería.')),
+            );
+            widget.onImageSelected(pickedFile);
+            return;
+          } else {
+            final String savedImagePath =
+                await ImageSaver.saveImage(pickedFile);
+
+            widget.onImageSelected(XFile(savedImagePath));
+          }
+        } else {
+          final String savedImagePath = await ImageSaver.saveImage(pickedFile);
+          widget.onImageSelected(XFile(savedImagePath));
+        }
+      } on PathExistsException catch (_) {
+        widget.onImageSelected(pickedFile);
+      }
     }
   }
 

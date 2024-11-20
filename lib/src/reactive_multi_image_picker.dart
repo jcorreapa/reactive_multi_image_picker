@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:reactive_forms/reactive_forms.dart';
@@ -116,6 +117,12 @@ class ReactiveMultiImagePicker<ModelDataType, ViewDataType>
                             field.didChange(
                               [...?field.value]..remove(item),
                             );
+                            if (item is XFile) {
+                              final file = File(item.path);
+                              if (file.existsSync()) {
+                                file.deleteSync();
+                              }
+                            }
                           },
                           child: Container(
                             margin: const EdgeInsets.all(3),

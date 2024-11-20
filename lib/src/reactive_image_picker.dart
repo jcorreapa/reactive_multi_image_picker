@@ -1,11 +1,9 @@
-import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
 import '../reactive_multi_image_picker.dart';
 import 'image_source_sheet.dart';
-import 'images_previewer.dart';
 
 class ReactiveImagePicker<ModelDataType, ViewDataType>
     extends ReactiveFormField<ModelDataType, ViewDataType> {
