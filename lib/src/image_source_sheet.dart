@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data' show Uint8List;
 
+import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
+import 'take_picture_page.dart';
 
 class ImageSourceBottomSheet extends StatefulWidget {
   /// Optional maximum height of image
@@ -56,6 +59,26 @@ class ImageSourceBottomSheet extends StatefulWidget {
 class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
   bool _isPickingImage = false;
 
+  Future<void> _onCameraSelected() async {
+    // Obtain a list of the available cameras on the device.
+    final cameras = await availableCameras();
+
+    // Get a specific camera from the list of available cameras.
+    final firstCamera = cameras.first;
+
+    Navigator.of(context)
+        .push<XFile?>(
+      MaterialPageRoute(
+        builder: (context) => TakePictureScreen(camera: firstCamera),
+      ),
+    )
+        .then((value) {
+      if (value != null) {
+        widget.onImageSelected(value);
+      }
+    });
+  }
+
   Future<void> _onPickImage(ImageSource source) async {
     if (_isPickingImage) return;
     _isPickingImage = true;
@@ -84,7 +107,7 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
             ListTile(
               leading: widget.cameraIcon,
               title: widget.cameraLabel,
-              onTap: () => _onPickImage(ImageSource.camera),
+              onTap: () => _onCameraSelected(),
             ),
             ListTile(
               leading: widget.galleryIcon,
