@@ -74,24 +74,11 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
       ),
     )
         .then((value) {
-      if (value != null) {
-        widget.onImageSelected(value);
-      }
+         _saveFile(value);
     });
   }
 
-  Future<void> _onPickImage(ImageSource source) async {
-    if (_isPickingImage) return;
-    _isPickingImage = true;
-    final imagePicker = ImagePicker();
-    final pickedFile = await imagePicker.pickImage(
-      source: source,
-      maxHeight: widget.maxHeight,
-      maxWidth: widget.maxWidth,
-      imageQuality: widget.imageQuality,
-      preferredCameraDevice: widget.preferredCameraDevice,
-    );
-    _isPickingImage = false;
+  Future<void> _saveFile(XFile? pickedFile) async {
     if (pickedFile != null) {
       PermissionStatus status = await Permission.photos.status;
       try {
@@ -119,6 +106,21 @@ class _ImageSourceBottomSheetState extends State<ImageSourceBottomSheet> {
         widget.onImageSelected(pickedFile);
       }
     }
+  }
+
+  Future<void> _onPickImage(ImageSource source) async {
+    if (_isPickingImage) return;
+    _isPickingImage = true;
+    final imagePicker = ImagePicker();
+    final pickedFile = await imagePicker.pickImage(
+      source: source,
+      maxHeight: widget.maxHeight,
+      maxWidth: widget.maxWidth,
+      imageQuality: widget.imageQuality,
+      preferredCameraDevice: widget.preferredCameraDevice,
+    );
+    _isPickingImage = false;
+    _saveFile(pickedFile);
   }
 
   @override
